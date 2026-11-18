@@ -1,0 +1,11 @@
+{
+  "name": "TogetherSpace",
+  "description": "Private Instagram-inspired social platform for two approved people with personal Google Drive storage, albums, stories, reels, messaging, and WebRTC calls.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

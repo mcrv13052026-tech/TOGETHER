@@ -1,0 +1,1300 @@
+# TOGETHERSPACE — COMPLETE MASTER PROJECT PROMPT
+## Private Instagram-Inspired Social Platform for Two People
+
+You are acting as a **Senior Full-Stack Developer, UI/UX Designer, Software Architect, Database Engineer, Application Security Engineer, and Privacy Compliance Specialist**.
+
+Your task is to design and develop a complete, production-oriented private social media web application called **TogetherSpace**.
+
+TogetherSpace is a private digital space for two approved people (the account owner and their invited partner/friend). It combines Instagram-inspired features, private messaging, photo and video albums, stories, reels, voice/video calls, and personal Google Drive storage.
+
+The application must be visually polished, responsive, secure, reliable, and deployable on Vercel.
+
+---
+
+# 1. CORE PROJECT OBJECTIVE
+
+Build a private social platform where two approved users can:
+
+- Share photos, videos, reels, and stories.
+- Create private albums and relationship memories.
+- Chat in real time.
+- Send voice messages and media.
+- Make voice and video calls.
+- Invite the second person using a secure invitation system.
+- Connect their individual Google Drive accounts.
+- Store their personal media in their own Google Drive storage.
+- View and manage shared content through TogetherSpace.
+- Control privacy, permissions, connected accounts, and data deletion.
+
+This is NOT a public social network.
+
+**Strict account limit: TWO approved accounts per TogetherSpace instance.**
+
+Do not implement unrestricted public registration or public user discovery.
+
+---
+
+# 2. TECHNOLOGY STACK
+
+Use the following technologies unless a genuine technical limitation requires a documented alternative.
+
+### Frontend
+- React
+- Vite
+- JavaScript
+- Tailwind CSS
+- React Router
+- Framer Motion
+- Lucide React
+- Axios
+
+### Backend
+- Node.js
+- Vercel serverless API routes
+- JavaScript
+- Mongoose
+- Zod for validation
+
+Do not depend on a permanently running Express server or persistent WebSocket server on Vercel.
+
+### Database
+- MongoDB Atlas
+- Mongoose models
+- Proper indexes
+- Schema validation
+- Secure database access
+- Owner-based authorization
+
+### Authentication
+- bcryptjs for password hashing
+- JWT or a well-maintained session implementation
+- Secure HTTP-only cookies
+- Email verification
+- Password reset
+- Invitation-based second-account activation
+
+### Realtime
+- Ably for:
+  - Real-time messages
+  - Typing indicators
+  - Online/offline presence
+  - Read receipts
+  - Notifications
+  - Call signaling
+
+### Media Storage
+- Google Drive API v3
+- Individual Google accounts for both users
+- OAuth 2.0 authorization-code flow
+- Encrypted refresh-token storage
+- Private media access
+
+### Voice and Video
+- WebRTC
+- Ably signaling
+- STUN/TURN infrastructure
+- A managed TURN provider for reliable connectivity
+
+### Deployment
+- Vercel
+- MongoDB Atlas
+- Google Cloud Console
+- Ably
+- Optional Resend integration for transactional emails
+
+---
+
+# 3. TWO-USER ACCOUNT AND FRIEND INVITATION SYSTEM
+
+Build a complete invitation feature.
+
+The first account is the application owner. The owner can invite exactly one additional person.
+
+### Invitation features
+
+1. Generate a unique, cryptographically secure invitation token.
+2. Send an invitation through email.
+3. Allow the owner to copy and share an invitation link.
+4. Show invitation status:
+   - Pending
+   - Accepted
+   - Expired
+   - Revoked
+5. Allow the owner to revoke an invitation.
+6. Allow the owner to generate a replacement invitation.
+7. Set an invitation expiration period.
+8. Make invitation tokens single-use.
+9. Bind invitations to the intended email address when an email invitation is used.
+10. Validate the invitation on the backend before allowing registration.
+11. Prevent an invitation from being accepted by an unauthorized third party.
+12. Show a clear invitation acceptance screen.
+13. Notify the owner when the invitation is accepted.
+14. Allow the owner to see whether the second account has completed registration.
+
+### Invitation acceptance workflow
+
+1. Owner creates an invitation.
+2. Backend generates a secure random token.
+3. Store only a cryptographic hash of the token in MongoDB.
+4. Send the invitation URL to the intended recipient.
+5. Recipient opens the invitation.
+6. Backend validates the token, expiration, email binding, and invitation status.
+7. Recipient creates an account and verifies their email.
+8. Backend atomically consumes the invitation.
+9. Second account becomes an approved user.
+10. Both users can now use TogetherSpace.
+
+### Critical restrictions
+
+- Maximum two active approved accounts.
+- No third account registration.
+- No public registration.
+- No user search or public friend discovery.
+- No invitation reuse.
+- No account creation by changing frontend requests.
+- Enforce the account limit at the database/backend level, not only in the UI.
+- Prevent race conditions where two people attempt to accept the final invitation simultaneously.
+- Only the owner can create or revoke invitations.
+- The owner cannot accidentally invite multiple active accounts.
+- Provide a secure owner recovery process if the second account is removed.
+
+### Friend and connection experience
+
+Call the relationship between the two approved accounts a private connection.
+
+Display:
+- Connected status
+- Partner/friend profile
+- Connection date
+- Shared albums
+- Shared memories
+- Shared activity
+- Connection settings
+
+Allow either person to disconnect the relationship through a clearly explained confirmation process.
+
+Disconnecting must not silently delete the other person's Google Drive files.
+
+---
+
+# 4. AUTHENTICATION AND ACCOUNT MANAGEMENT
+
+Create:
+
+- Login page
+- Owner account setup
+- Invitation acceptance registration
+- Email verification
+- Forgot password
+- Reset password
+- Logout
+- Profile setup
+- Account settings
+- Connected devices/sessions page
+- Account deletion request
+
+### Authentication requirements
+
+- Hash passwords using bcrypt.
+- Never store plaintext passwords.
+- Use secure HTTP-only cookies.
+- Use Secure and SameSite cookie attributes appropriately.
+- Never store authentication tokens in localStorage.
+- Validate all authentication requests on the server.
+- Add rate limits to login, registration, and password reset.
+- Prevent brute-force attempts.
+- Use generic authentication error messages where appropriate.
+- Revoke sessions after password changes when appropriate.
+- Support logout from all sessions.
+- Verify email addresses before enabling account access.
+- Use short-lived access credentials and secure session renewal.
+- Protect authentication endpoints against CSRF.
+- Never expose secrets in frontend code.
+
+---
+
+# 5. GOOGLE DRIVE INTEGRATION
+
+Both approved users must be able to connect their own personal Google accounts.
+
+Each person stores their own uploaded media in their own Google Drive.
+
+### Google connection features
+
+- Connect Google Drive.
+- Disconnect Google Drive.
+- Reconnect expired authorization.
+- Display connected Google email.
+- Display available storage where supported.
+- Display used storage where supported.
+- Display the owner's media storage usage.
+- Display Google account connection status.
+- Show upload progress.
+- Show upload failures and retry options.
+
+### OAuth requirements
+
+- Use Google OAuth 2.0 authorization-code flow.
+- Validate OAuth state.
+- Use PKCE where supported by the selected OAuth flow.
+- Request the minimum necessary scopes.
+- Prefer `drive.file` when it supports the implemented use cases.
+- Explain any additional scope before requesting it.
+- Never expose Google client secrets or refresh tokens to the browser.
+- Encrypt refresh tokens before storing them in MongoDB.
+- Support token refresh.
+- Handle revoked permissions.
+- Allow users to disconnect their Google account.
+- Delete stored credentials after disconnection.
+
+### Media storage behavior
+
+- Photos stored in the owner's Google Drive.
+- Videos stored in the owner's Google Drive.
+- Reels stored in the owner's Google Drive.
+- Voice messages stored in the sender's Google Drive.
+- Story media stored in the owner's Google Drive.
+- Thumbnails and media metadata managed by TogetherSpace.
+- Shared media access must be authorized through the backend.
+
+Do not create public Google Drive links.
+
+Do not assume that a user's Google account always has 15 GB available. Display actual available quota where the API permits it. Explain that Google storage may be shared across Drive, Gmail, and Google Photos.
+
+### Important media delivery requirements
+
+Google Drive is personal file storage, not a dedicated streaming CDN.
+
+Implement and test:
+- Thumbnail generation.
+- Video preview.
+- Buffered playback.
+- HTTP Range requests where supported by the delivery implementation.
+- Appropriate content types.
+- Large-file upload handling.
+- File size limits.
+- Retry handling.
+- Upload progress.
+- Private authenticated media delivery.
+
+Do not claim Instagram-level streaming performance without real testing.
+
+---
+
+# 6. HOME FEED
+
+Create an Instagram-inspired home page.
+
+Features:
+- Stories row.
+- Feed posts.
+- Photo posts.
+- Video posts.
+- Multiple-photo carousel.
+- Captions.
+- Timestamps.
+- Like/unlike.
+- Comments.
+- Save posts.
+- Share to private chat.
+- Delete own posts.
+- Edit own captions.
+- Post ownership indicators.
+
+The feed must only show content authorized for the two approved users.
+
+---
+
+# 7. REELS
+
+Create a full-screen vertical reels experience.
+
+Features:
+- Vertical video feed.
+- Scroll or swipe to move between reels.
+- Autoplay the visible reel.
+- Pause videos outside the viewport.
+- Double-tap to like.
+- Like/unlike.
+- Comments.
+- Save reels.
+- Share to chat.
+- Mute/unmute.
+- Fullscreen.
+- Video captions.
+- Cover images.
+- Upload reels.
+- Delete own reels.
+- Watch history.
+
+Optimize video loading and avoid loading every video simultaneously.
+
+---
+
+# 8. STORIES
+
+Implement Instagram-style stories.
+
+Features:
+- Upload photos.
+- Upload videos.
+- Add text stories.
+- Add captions.
+- Add simple visual overlays.
+- View stories.
+- React to stories.
+- Reply to stories.
+- Display story viewers.
+- Display story progress.
+- Archive stories.
+
+### Expiration
+
+- Stories expire after 24 hours.
+- Validate expiration on every relevant API request.
+- Use `expiresAt` in MongoDB.
+- Optional Vercel Cron cleanup.
+- Expired stories must not appear in active feeds.
+- Do not automatically delete original Google Drive files unless the owner explicitly chooses that behavior.
+
+---
+
+# 9. PRIVATE MESSAGING
+
+Build a real-time private messaging experience.
+
+Features:
+- Text messages.
+- Photo sharing.
+- Video sharing.
+- Voice messages.
+- Emoji reactions.
+- Reply to messages.
+- Message deletion.
+- Read receipts.
+- Typing indicators.
+- Online/offline presence.
+- Message timestamps.
+- Media previews.
+- Message history.
+- Unread message count.
+- Message notifications.
+
+### Voice messages
+
+- Record audio in the browser.
+- Preview before sending.
+- Send and receive audio.
+- Store audio in the sender's Google Drive.
+- Display waveform or audio progress where practical.
+- Provide playback controls.
+
+Only the two approved accounts can access the conversation.
+
+---
+
+# 10. VOICE AND VIDEO CALLS
+
+Use WebRTC for audio/video communication.
+
+Features:
+- Initiate voice calls.
+- Initiate video calls.
+- Accept/reject calls.
+- End calls.
+- Mute/unmute microphone.
+- Enable/disable camera.
+- Switch camera where supported.
+- Display call status.
+- Handle disconnected calls.
+- Show missed calls.
+- Maintain call history.
+
+Use Ably for signaling.
+
+Use STUN/TURN infrastructure for NAT traversal and reliability.
+
+Do not record calls by default.
+
+Ask for microphone and camera permissions only when needed.
+
+Display clear indicators when microphone or camera is active.
+
+---
+
+# 11. PRIVATE ALBUMS AND MEMORIES
+
+Create an album and memories section.
+
+Features:
+- Create albums.
+- Edit album name.
+- Add descriptions.
+- Upload photos.
+- Upload videos.
+- Remove media from albums.
+- Reorder media.
+- Favorite albums.
+- Organize by date.
+- Show upload attribution.
+- Create shared albums.
+- Create relationship timelines.
+- Search albums.
+- View albums in grid and slideshow layouts.
+
+Album access must be restricted to the two approved users according to the media owner's sharing settings.
+
+---
+
+# 12. PROFILE AND SETTINGS
+
+Each user has a private profile.
+
+Profile fields:
+- Profile photo.
+- Username.
+- Display name.
+- Bio.
+- Account creation date.
+- Posts.
+- Reels.
+- Albums.
+- Saved media.
+
+Settings:
+- Edit profile.
+- Change password.
+- Email settings.
+- Google Drive connection.
+- Theme settings.
+- Notification preferences.
+- Privacy settings.
+- Connected sessions.
+- Account deletion.
+- Data export.
+
+---
+
+# 13. DESIGN AND USER EXPERIENCE
+
+Use Instagram as design inspiration, but create an original TogetherSpace identity.
+
+### Visual direction
+
+- Modern.
+- Minimal.
+- Premium.
+- Elegant.
+- Smooth animations.
+- Clean typography.
+- Rounded cards.
+- Subtle shadows.
+- Attractive image layouts.
+- Consistent spacing.
+
+### Layout
+
+Desktop:
+- Left sidebar navigation.
+- Center feed.
+- Optional right-side activity panel.
+
+Mobile:
+- Bottom navigation.
+- Mobile-friendly feed.
+- Full-screen reels.
+- Mobile-friendly messaging.
+- Responsive profile and albums.
+
+### Navigation
+
+- Home
+- Search/Explore (private content only; no public discovery)
+- Reels
+- Messages
+- Stories
+- Albums
+- Profile
+- Settings
+
+### Themes
+
+- Light mode.
+- Dark mode.
+- Theme switcher.
+- Save theme preference.
+- Respect system theme initially.
+
+Use Framer Motion for subtle transitions, not excessive animations.
+
+---
+
+# 14. SECURITY REQUIREMENTS
+
+Security is a core requirement, not an optional enhancement.
+
+Implement and test the following:
+
+### Authentication security
+- bcrypt password hashing.
+- Secure HTTP-only cookies.
+- Secure session handling.
+- CSRF protection.
+- Login rate limiting.
+- Password reset token expiration.
+- Email verification.
+- Session revocation.
+- Brute-force protection.
+
+### Authorization
+- Every protected API endpoint must authenticate the user.
+- Every resource must be checked for ownership or explicit sharing permission.
+- Never trust user IDs supplied by the frontend.
+- Prevent IDOR vulnerabilities.
+- Prevent unauthorized access to messages, media, albums, and calls.
+- Enforce the two-account limit on the backend.
+- Verify that the requesting user belongs to the private connection.
+
+### API security
+- Validate all input using Zod.
+- Validate request methods.
+- Validate uploaded file types and sizes.
+- Prevent NoSQL injection.
+- Prevent XSS.
+- Prevent CSRF.
+- Prevent SSRF.
+- Prevent path traversal.
+- Add rate limits.
+- Use safe error responses.
+- Avoid leaking stack traces.
+- Set appropriate security headers.
+- Configure a restrictive Content Security Policy where practical.
+- Configure CORS only for trusted origins.
+
+### Google security
+- Encrypt OAuth refresh tokens at rest.
+- Never expose OAuth credentials to the frontend.
+- Validate OAuth state.
+- Use minimal Google scopes.
+- Securely handle revoked access.
+- Do not expose public media links.
+- Verify media ownership and permissions on every request.
+
+### Database security
+- Use environment variables for credentials.
+- Never commit secrets to Git.
+- Restrict MongoDB network access.
+- Use database least-privilege access where available.
+- Add indexes for authorization and lookup operations.
+- Prevent duplicate invitation acceptance.
+- Use atomic operations for account limits and invitation consumption.
+
+### File security
+- Set maximum upload sizes.
+- Validate MIME types and file signatures where feasible.
+- Generate safe server-side filenames where needed.
+- Do not execute uploaded files.
+- Do not trust filenames or file extensions.
+- Consider malware scanning for uploaded content.
+- Do not expose internal Drive file IDs unnecessarily.
+
+### Privacy and monitoring
+- Keep audit logs for sensitive actions.
+- Never log passwords, access tokens, refresh tokens, or private message contents unnecessarily.
+- Avoid collecting unnecessary personal information.
+- Do not use private content for advertising or public analytics.
+- Restrict administrative access.
+- Provide a way to review connected sessions and revoke access.
+
+---
+
+# 15. PRIVACY POLICY PAGE
+
+Create a dedicated `/privacy-policy` page.
+
+The page must be readable, responsive, and accessible from the footer and account settings.
+
+Draft the policy specifically for TogetherSpace.
+
+Include these sections:
+
+### 1. Introduction
+Explain that TogetherSpace is a private social platform designed for two approved accounts.
+
+### 2. Information collected
+Explain the categories of data that may be processed:
+- Name and email address.
+- Username and profile information.
+- Authentication and session data.
+- Posts, photos, videos, stories, and reels.
+- Messages and voice messages.
+- Album and media metadata.
+- Google account connection information.
+- Technical logs and security events.
+- Call history and connection metadata.
+
+Do not claim that calls or private content are recorded unless the implementation actually does so.
+
+### 3. Google Drive information
+Explain:
+- Each user connects their own Google account.
+- Media may be stored in the connected user's Google Drive.
+- TogetherSpace uses Google authorization only for the features the user approves.
+- OAuth tokens are protected and never displayed publicly.
+- Users can disconnect their Google account.
+- Disconnecting Google may prevent access to media stored there.
+- Google handles its own services and storage according to its policies.
+
+### 4. How information is used
+Explain that data is used to:
+- Authenticate users.
+- Operate the private platform.
+- Display posts and albums.
+- Deliver messages.
+- Enable calls.
+- Synchronize media metadata.
+- Maintain security.
+- Improve reliability.
+
+### 5. Data sharing
+State that TogetherSpace does not make private posts, messages, albums, or media publicly discoverable.
+
+Explain that data may be processed by essential service providers such as:
+- MongoDB Atlas.
+- Google Drive.
+- Vercel.
+- Ably.
+- Email delivery provider.
+
+Do not falsely promise that no third-party service processes any data.
+
+### 6. Media privacy
+Explain:
+- Media is private by default.
+- Access is restricted to authorized users.
+- No public sharing links are created by default.
+- Media access is checked through backend authorization.
+- Users should understand that sharing content with the second account permits that person to view it.
+
+### 7. Retention and deletion
+Explain:
+- Story expiration after 24 hours.
+- Media retention in Google Drive.
+- Database metadata retention.
+- Account deletion.
+- Message deletion.
+- Backup retention.
+- The difference between removing an item from TogetherSpace and deleting its original Google Drive file.
+
+### 8. Security
+Explain the security controls actually implemented, without claiming absolute security.
+
+### 9. User rights and controls
+Provide options to:
+- Access account information.
+- Edit profile information.
+- Export personal data where supported.
+- Disconnect Google Drive.
+- Revoke sessions.
+- Delete content.
+- Request account deletion.
+- Contact the platform owner.
+
+### 10. Children's privacy
+State the intended age requirements and applicable restrictions. Do not claim legal compliance without review.
+
+### 11. International processing
+Explain that service providers may process data in different countries depending on their infrastructure and configurations.
+
+### 12. Policy changes
+Explain how changes will be communicated and when they take effect.
+
+### 13. Contact information
+Provide a configurable privacy contact email. Do not invent a real address.
+
+Include a clearly visible Last Updated date.
+
+---
+
+# 16. TERMS AND CONDITIONS PAGE
+
+Create `/terms` with the following sections:
+
+1. Acceptance of Terms.
+2. Eligibility and Account Restrictions.
+3. Two-Account Private Connection.
+4. Invitation and Registration Rules.
+5. Account Security.
+6. Acceptable Use.
+7. User Content Ownership.
+8. Permission to Store and Display Content.
+9. Google Drive Integration.
+10. Third-Party Services.
+11. Private Messaging and Calls.
+12. Content Deletion and Account Termination.
+13. Service Availability.
+14. Limitation of Liability.
+15. Changes to Terms.
+16. Contact Information.
+
+Important:
+- Users retain ownership of their uploaded content.
+- Users grant TogetherSpace only the limited permissions necessary to operate the service.
+- Users must not upload unlawful or harmful content.
+- Users must not attempt to access the other user's private account or connected Google Drive without permission.
+- Do not claim that TogetherSpace owns user media.
+- Clearly explain that Google, Vercel, MongoDB, Ably, and other providers have their own terms.
+
+The Terms and Privacy Policy must be configurable and reviewed before public production use.
+
+---
+
+# 17. PRIVACY SETTINGS AND USER CONTROLS
+
+Build an actual privacy settings interface.
+
+Features:
+- Account visibility: private by default.
+- Google Drive connection status.
+- Revoke Google access.
+- Active sessions.
+- Logout from all devices.
+- Change password.
+- Export personal data.
+- Delete own posts.
+- Delete own stories.
+- Delete own messages where supported.
+- Delete own albums.
+- Request account deletion.
+- Review invitation status.
+- Revoke pending invitation.
+- Manage notification preferences.
+
+Provide confirmation screens for destructive operations.
+
+Do not delete the other user's files when one person deletes their own account.
+
+Clearly explain shared-media consequences before disconnecting or deleting an account.
+
+---
+
+# 18. DATABASE COLLECTIONS
+
+Design appropriate MongoDB collections and relationships.
+
+Suggested collections:
+
+- `users`
+- `invitations`
+- `connections`
+- `googleAccounts`
+- `posts`
+- `media`
+- `reels`
+- `stories`
+- `messages`
+- `conversations`
+- `albums`
+- `comments`
+- `likes`
+- `savedMedia`
+- `notifications`
+- `calls`
+- `activities`
+- `sessions`
+- `auditLogs`
+
+### Important model requirements
+
+**User**
+- Email
+- Username
+- Display name
+- Password hash
+- Email verification status
+- Profile image
+- Role
+- Account status
+- Created date
+
+**Invitation**
+- Token hash
+- Inviter ID
+- Intended recipient email
+- Status
+- Expiration date
+- Accepted user ID
+- Created date
+- Revoked date
+
+**GoogleAccount**
+- User ID
+- Google account email
+- Encrypted refresh token
+- Granted scopes
+- Connection status
+- Created date
+- Updated date
+
+**Media**
+- Owner ID
+- Google Drive file ID
+- MIME type
+- File size
+- Thumbnail information
+- Media type
+- Allowed viewers
+- Album IDs
+- Created date
+
+**Story**
+- Owner ID
+- Media ID
+- Caption
+- Created date
+- Expiration date
+
+**Message**
+- Conversation ID
+- Sender ID
+- Message type
+- Text content
+- Media reference
+- Reply reference
+- Reactions
+- Read status
+- Created date
+
+Add proper indexes and database constraints.
+
+Use atomic operations for critical account and invitation operations.
+
+Do not rely on frontend validation for data integrity.
+
+---
+
+# 19. API STRUCTURE
+
+Create organized serverless API routes.
+
+Suggested routes:
+
+### Authentication
+- `/api/auth/register`
+- `/api/auth/login`
+- `/api/auth/logout`
+- `/api/auth/verify-email`
+- `/api/auth/forgot-password`
+- `/api/auth/reset-password`
+- `/api/auth/session`
+
+### Invitations
+- `/api/invitations/create`
+- `/api/invitations/status`
+- `/api/invitations/validate`
+- `/api/invitations/accept`
+- `/api/invitations/revoke`
+
+### Google
+- `/api/google/connect`
+- `/api/google/callback`
+- `/api/google/disconnect`
+- `/api/google/storage`
+
+### Posts
+- `/api/posts/create`
+- `/api/posts/feed`
+- `/api/posts/:id`
+- `/api/posts/:id/like`
+- `/api/posts/:id/comment`
+
+### Reels
+- `/api/reels/upload`
+- `/api/reels/feed`
+- `/api/reels/:id`
+- `/api/reels/:id/like`
+- `/api/reels/:id/save`
+
+### Stories
+- `/api/stories/create`
+- `/api/stories/feed`
+- `/api/stories/:id/view`
+- `/api/stories/archive`
+
+### Messages
+- `/api/messages/conversations`
+- `/api/messages/send`
+- `/api/messages/history`
+- `/api/messages/read`
+
+### Media
+- `/api/media/upload-session`
+- `/api/media/complete-upload`
+- `/api/media/stream`
+- `/api/media/delete`
+
+### Albums
+- `/api/albums/create`
+- `/api/albums/list`
+- `/api/albums/:id`
+- `/api/albums/:id/add-media`
+
+### Calls
+- `/api/calls/initiate`
+- `/api/calls/history`
+
+### Privacy
+- `/api/privacy/export`
+- `/api/privacy/delete-account`
+- `/api/privacy/sessions`
+- `/api/privacy/revoke-sessions`
+
+Every endpoint must enforce authentication, authorization, validation, and ownership checks.
+
+These routes are a starting structure, not permission to implement insecure placeholder endpoints.
+
+---
+
+# 20. ERROR HANDLING AND USER FEEDBACK
+
+Create useful messages for:
+- Invalid login.
+- Expired invitation.
+- Already-used invitation.
+- Invitation revoked.
+- Account limit reached.
+- Google authorization failed.
+- Google token expired.
+- Google Drive disconnected.
+- Upload failed.
+- Unsupported file.
+- File too large.
+- Unauthorized media access.
+- Message delivery failed.
+- Network unavailable.
+- Call connection failed.
+
+Never show internal server errors, credentials, tokens, or stack traces to normal users.
+
+Provide loading states, empty states, retry buttons, and success messages.
+
+---
+
+# 21. PERFORMANCE AND ACCESSIBILITY
+
+Implement:
+- Lazy-loaded images.
+- Responsive image sizing.
+- Thumbnail-first video loading.
+- Pagination or cursor-based feed loading.
+- Efficient database indexes.
+- Optimized React components.
+- Avoid unnecessary API requests.
+- Loading skeletons.
+- Accessible labels.
+- Keyboard navigation.
+- Visible focus indicators.
+- Appropriate color contrast.
+- Reduced-motion support.
+
+Do not load all posts, messages, and media at once.
+
+---
+
+# 22. VERCEL DEPLOYMENT
+
+Prepare the project for Vercel.
+
+Requirements:
+- Correct Vite build configuration.
+- Correct serverless API routing.
+- Production frontend build.
+- Secure environment variable configuration.
+- MongoDB Atlas connection.
+- Google OAuth redirect configuration.
+- Ably configuration.
+- TURN provider configuration.
+- Optional email provider configuration.
+- Vercel Cron configuration if needed.
+- Production error handling.
+- Correct redirect and rewrite configuration.
+
+Do not place secrets in `VITE_` environment variables.
+
+Create `.env.example` containing placeholder names only.
+
+Never commit `.env`.
+
+Provide exact deployment instructions.
+
+---
+
+# 23. REQUIRED ENVIRONMENT VARIABLES
+
+Create a documented `.env.example` with variables appropriate to the selected implementation.
+
+Suggested variables:
+
+```env
+NODE_ENV=development
+
+MONGODB_URI=
+
+JWT_SECRET=
+SESSION_SECRET=
+ENCRYPTION_KEY=
+
+APP_URL=http://localhost:5173
+API_BASE_URL=http://localhost:5173
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+
+ABLY_API_KEY=
+
+EMAIL_PROVIDER=
+RESEND_API_KEY=
+EMAIL_FROM=
+
+TURN_SERVER_URL=
+TURN_USERNAME=
+TURN_CREDENTIAL=
+
+CRON_SECRET=
+```
+
+Use only the variables actually required by the implementation.
+
+Validate required environment variables on the server.
+
+Do not expose secrets to the browser.
+
+---
+
+# 24. TESTING REQUIREMENTS
+
+Create tests for:
+
+### Authentication
+- Owner registration.
+- Login.
+- Logout.
+- Email verification.
+- Password reset.
+- Unauthorized access.
+
+### Invitations
+- Valid invitation.
+- Invalid invitation.
+- Expired invitation.
+- Revoked invitation.
+- Reused invitation.
+- Wrong email.
+- Third account blocked.
+- Concurrent invitation acceptance.
+
+### Authorization
+- User cannot access unauthorized media.
+- User cannot read unauthorized messages.
+- User cannot modify another user's posts.
+- User cannot connect or disconnect another user's Google account.
+- User cannot bypass the two-account restriction.
+
+### Google Drive
+- OAuth success.
+- OAuth failure.
+- Token refresh.
+- Revoked authorization.
+- Upload.
+- Download/stream.
+- Private access enforcement.
+
+### Stories
+- Active story visible.
+- Expired story hidden.
+- Unauthorized viewer rejected.
+
+### Messaging and calls
+- Message delivery.
+- Read receipts.
+- Typing status.
+- Unauthorized conversation access.
+- Call signaling authorization.
+
+### Deployment
+- Production build.
+- API routing.
+- Environment validation.
+- MongoDB connection.
+- Vercel deployment smoke test.
+
+Do not claim that tests pass unless they have actually been executed.
+
+---
+
+# 25. DEVELOPMENT PHASES
+
+Develop the project in phases.
+
+### Phase 1 — Foundation and UI
+- Initialize project.
+- Configure Vite and Tailwind.
+- Create responsive layout.
+- Create navigation.
+- Create light/dark themes.
+- Create login and invitation screens.
+- Create Home, Reels, Messages, Stories, Albums, Profile, and Settings UI.
+
+### Phase 2 — Database and Authentication
+- MongoDB connection.
+- User models.
+- Authentication.
+- Email verification.
+- Password reset.
+- Secure cookies.
+- Two-account enforcement.
+
+### Phase 3 — Invitation System
+- Create invitation.
+- Email invitation.
+- Shareable invitation link.
+- Invitation expiration.
+- Invitation acceptance.
+- Revoke invitation.
+- Connection management.
+
+### Phase 4 — Google Drive
+- Google Cloud setup.
+- OAuth integration.
+- Separate Drive connections.
+- Encrypted tokens.
+- Storage information.
+- Upload and media delivery.
+
+### Phase 5 — Posts and Albums
+- Feed.
+- Posts.
+- Likes.
+- Comments.
+- Saved posts.
+- Albums.
+- Memories.
+
+### Phase 6 — Reels and Stories
+- Reels upload and feed.
+- Video playback.
+- Story creation.
+- Story expiration.
+- Story archive.
+
+### Phase 7 — Messaging
+- Ably setup.
+- Text messages.
+- Media sharing.
+- Voice messages.
+- Reactions.
+- Read receipts.
+- Presence.
+
+### Phase 8 — Voice and Video Calls
+- WebRTC.
+- Call signaling.
+- STUN/TURN.
+- Call history.
+- Connection handling.
+
+### Phase 9 — Security and Privacy
+- Security audit.
+- Privacy settings.
+- Privacy Policy.
+- Terms and Conditions.
+- Data export.
+- Account deletion.
+- Session management.
+- Authorization tests.
+
+### Phase 10 — Production
+- Full test suite.
+- Performance checks.
+- Vercel deployment.
+- Production environment setup.
+- Final verification.
+
+---
+
+# 26. STRICT DEVELOPMENT RULES
+
+Follow these rules throughout development:
+
+1. First inspect the existing repository and understand its current structure.
+2. Do not assume a file exists without checking.
+3. Do not overwrite existing working code without reviewing it.
+4. Do not create fake API integrations.
+5. Do not use hardcoded fake users in production.
+6. Do not use localStorage as authentication storage.
+7. Do not use public Google Drive links for private media.
+8. Do not expose Google credentials or database credentials.
+9. Do not implement unrestricted registration.
+10. Do not allow more than two approved accounts.
+11. Do not treat frontend restrictions as security.
+12. Do not claim an integration works until it has been tested.
+13. Do not leave critical security functions as TODO comments.
+14. Do not generate fake deployment success messages.
+15. Do not silently delete users' original Google Drive files.
+16. Do not claim legal compliance merely because a Privacy Policy page exists.
+17. Keep code modular, readable, and maintainable.
+18. Use complete working files when asked to provide code.
+19. Explain setup instructions for Windows PowerShell and VS Code.
+20. Document every required external service and configuration step.
+
+If a required external service or credential is unavailable, build the correct integration boundary, explain what is missing, and do not pretend it is operational.
+
+---
+
+# 27. FINAL EXPECTED RESULT
+
+Deliver a complete, working TogetherSpace application with:
+
+- Premium Instagram-inspired UI.
+- Exactly two approved accounts.
+- Secure friend/partner invitation system.
+- Private account connection.
+- Email verification and authentication.
+- Google Drive integration for both users.
+- Private photo and video sharing.
+- Home feed.
+- Reels.
+- Stories with 24-hour expiration.
+- Private messaging.
+- Voice messages.
+- Voice and video calls.
+- Albums and memories.
+- User profiles.
+- Light and dark themes.
+- Privacy settings.
+- Security controls.
+- Privacy Policy.
+- Terms and Conditions.
+- MongoDB persistence.
+- Vercel deployment support.
+
+The final product must feel like a polished private social platform, not a basic CRUD application or a static UI demo.
+
+## FINAL INSTRUCTION
+
+Begin by inspecting the existing project repository.
+
+Then provide:
+
+1. A short repository assessment.
+2. The implementation architecture.
+3. A list of required external accounts and credentials.
+4. A phased implementation plan.
+5. The first implementation phase.
+
+If no repository exists, initialize the project from scratch.
+
+Do not attempt to build everything in one uncontrolled operation. Complete each phase, verify it, and then proceed to the next.
+
+Prioritize security, privacy, data ownership, and reliable functionality over unnecessary features or visual effects.
